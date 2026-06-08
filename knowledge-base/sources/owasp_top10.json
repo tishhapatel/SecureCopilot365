@@ -1,0 +1,17 @@
+[
+  {
+    "category": "A01:2021",
+    "name": "Broken Access Control",
+    "description": "Restrictions on what authenticated users are allowed to do are not properly enforced. Gaps lead to unauthorized privilege escalation or data exposure."
+  },
+  {
+    "category": "A03:2021",
+    "name": "Injection",
+    "description": "User-supplied data is not validated, filtered, or sanitized by the application, leading to SQL Injection, Command Injection, or Prompt Injection (in AI systems)."
+  },
+  {
+    "category": "A07:2021",
+    "name": "Identification and Authentication Failures",
+    "description": "Confirmation of user identity, authentication, and session management is critical to protect against brute-force attacks or missing multi-factor authentication."
+  }
+]

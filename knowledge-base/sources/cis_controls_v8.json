@@ -1,0 +1,22 @@
+[
+  {
+    "control": "Control 1",
+    "name": "Inventory and Control of Enterprise Assets",
+    "description": "Actively manage (inventory, track, and correct) all enterprise assets (end-user devices, servers, and network devices) on the network."
+  },
+  {
+    "control": "Control 3",
+    "name": "Data Protection",
+    "description": "Develop processes and technical controls to identify, classify, securely handle, retain, and dispose of data in compliance with regulatory mandates."
+  },
+  {
+    "control": "Control 5",
+    "name": "Account Management",
+    "description": "Use processes and tools to assign and manage credentials for administrative accounts, user accounts, and service accounts based on least-privilege principles."
+  },
+  {
+    "control": "Control 14",
+    "name": "Security Awareness and Skills Training",
+    "description": "Establish and maintain a security awareness program to influence behaviors and cultivate a security-conscious culture among employees."
+  }
+]

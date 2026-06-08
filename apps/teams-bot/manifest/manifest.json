@@ -1,0 +1,46 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "${TEAMS_APP_ID}",
+  "packageName": "com.securecopilot365.teamsbot",
+  "developer": {
+    "name": "SecureCopilot 365 Inc.",
+    "websiteUrl": "https://securecopilot365.example.com",
+    "privacyUrl": "https://securecopilot365.example.com/privacy",
+    "termsOfUseUrl": "https://securecopilot365.example.com/terms"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "SecureCopilot 356",
+    "full": "SecureCopilot 365 AI Security Agent"
+  },
+  "description": {
+    "short": "AI Security, Compliance & Risk Agent for Microsoft 365 Copilot",
+    "full": "AI Cybersecurity, Compliance, and Risk Management Agent designed for Microsoft 365. Provides real-time phishing detection, ISO 27001/GDPR audit readiness, vendor risk scoring, and personalized security coaching."
+  },
+  "accentColor": "#0F52BA",
+  "bots": [
+    {
+      "botId": "${TEAMS_BOT_ID}",
+      "scopes": [
+        "personal",
+        "team",
+        "groupChat"
+      ],
+      "supportsFiles": true,
+      "isNotificationOnly": false
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "*.ngrok-free.app",
+    "securecopilot365.example.com"
+  ]
+}

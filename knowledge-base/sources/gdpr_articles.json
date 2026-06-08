@@ -1,0 +1,42 @@
+[
+  {
+    "article": "Article 5",
+    "title": "Principles relating to processing of personal data",
+    "text": "Personal data shall be processed lawfully, fairly and in a transparent manner; collected for specified, explicit and legitimate purposes; adequate, relevant and limited to what is necessary (data minimisation); accurate and kept up to date; kept in a form which permits identification for no longer than necessary (storage limitation); processed in a manner that ensures appropriate security (integrity and confidentiality)."
+  },
+  {
+    "article": "Article 6",
+    "title": "Lawfulness of processing",
+    "text": "Processing shall be lawful only if and to the extent that at least one of the following applies: consent is given; processing is necessary for the performance of a contract; processing is necessary for compliance with a legal obligation; processing is necessary to protect vital interests; processing is necessary for public interest tasks; processing is necessary for legitimate interests."
+  },
+  {
+    "article": "Article 13",
+    "title": "Information to be provided where personal data are collected",
+    "text": "Where personal data relating to a data subject are collected from the data subject, the controller shall, at the time when personal data are obtained, provide the data subject with information: identity of controller; purposes of processing; legal basis; recipients of personal data; transfer details; retention period; rights to access, rectify or erase."
+  },
+  {
+    "article": "Article 17",
+    "title": "Right to erasure ('right to be forgotten')",
+    "text": "The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay and the controller shall have the obligation to erase personal data without undue delay where personal data are no longer necessary, consent is withdrawn, or processing is objected to."
+  },
+  {
+    "article": "Article 25",
+    "title": "Data protection by design and by default",
+    "text": "The controller shall implement appropriate technical and organisational measures, such as pseudonymisation, which are designed to implement data-protection principles, such as data minimisation, in an effective manner and to integrate the necessary safeguards into the processing."
+  },
+  {
+    "article": "Article 32",
+    "title": "Security of processing",
+    "text": "The controller and the processor shall implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk, including: pseudonymisation and encryption of personal data; ability to ensure ongoing confidentiality, integrity, availability and resilience; ability to restore availability and access in a timely manner; process for regularly testing and evaluating security measures."
+  },
+  {
+    "article": "Article 33",
+    "title": "Notification of a personal data breach to the supervisory authority",
+    "text": "In the case of a personal data breach, the controller shall without undue delay and, where feasible, not later than 72 hours after having become aware of it, notify the personal data breach to the supervisory authority, unless the breach is unlikely to result in a risk to the rights and freedoms of natural persons."
+  },
+  {
+    "article": "Article 35",
+    "title": "Data protection impact assessment (DPIA)",
+    "text": "Where a type of processing in particular using new technologies is likely to result in a high risk to the rights and freedoms of natural persons, the controller shall, prior to the processing, carry out an assessment of the impact of the envisaged processing operations on the protection of personal data."
+  }
+]

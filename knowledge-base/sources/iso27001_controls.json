@@ -1,0 +1,50 @@
+[
+  {
+    "control": "A.5.15",
+    "theme": "Organizational",
+    "title": "Access control",
+    "description": "Rules to control physical and logical access to information and other associated assets shall be established and implemented based on business and information security requirements."
+  },
+  {
+    "control": "A.5.19",
+    "theme": "Organizational",
+    "title": "Information security in supplier relationships",
+    "description": "Processes and procedures shall be defined and implemented to manage information security risks associated with the use of supplier's products or services."
+  },
+  {
+    "control": "A.6.3",
+    "theme": "People",
+    "title": "Information security awareness, education and training",
+    "description": "Personnel of the organization and relevant interested parties shall receive appropriate information security awareness, education and training and regular updates in organizational policies and procedures, as relevant for their job function."
+  },
+  {
+    "control": "A.8.3",
+    "theme": "Technological",
+    "title": "Information backup",
+    "description": "Backup copies of information, software and system images shall be taken and regularly tested in accordance with the agreed backup policy."
+  },
+  {
+    "control": "A.8.5",
+    "theme": "Technological",
+    "title": "Secure authentication",
+    "description": "Secure authentication controls shall be implemented based on information classification and access control requirements, ensuring multi-factor authentication (MFA) is configured for all systems containing sensitive data."
+  },
+  {
+    "control": "A.8.8",
+    "theme": "Technological",
+    "title": "Management of technical vulnerabilities",
+    "description": "Information about technical vulnerabilities of information systems in use shall be obtained, the organization's exposure to such vulnerabilities evaluated and appropriate measures taken to address the associated risk."
+  },
+  {
+    "control": "A.8.20",
+    "theme": "Technological",
+    "title": "Network security",
+    "description": "Networks and network devices shall be secured, monitored and managed to protect information in systems and applications."
+  },
+  {
+    "control": "A.8.24",
+    "theme": "Technological",
+    "title": "Use of cryptography",
+    "description": "Rules for the effective use of cryptography, including key management, shall be defined and implemented to protect confidentiality, integrity, authenticity and non-repudiation of information."
+  }
+]

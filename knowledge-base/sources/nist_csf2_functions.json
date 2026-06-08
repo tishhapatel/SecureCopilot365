@@ -1,0 +1,44 @@
+[
+  {
+    "function": "GOVERN (GV)",
+    "category": "GV.SC",
+    "title": "Supplier Risk Management",
+    "description": "Supplier information security requirements are identified, established, and assessed. Supply chain risk management processes are established and integrated into organizational risk management."
+  },
+  {
+    "function": "IDENTIFY (ID)",
+    "category": "ID.AM",
+    "title": "Asset Management",
+    "description": "Assets, including data, hardware, software, personnel, and facilities, are inventoried and managed to support prioritization based on organization classification."
+  },
+  {
+    "function": "PROTECT (PR)",
+    "category": "PR.AC",
+    "title": "Identity Management, Authentication, and Access Control",
+    "description": "Access to physical and logical assets is limited to authorized users and processes. MFA is enforced, and least privilege principles are applied to authorization roles."
+  },
+  {
+    "function": "PROTECT (PR)",
+    "category": "PR.AT",
+    "title": "Awareness and Training",
+    "description": "The organization's personnel are provided with cybersecurity awareness education and training to reduce human-factor threat vectors (e.g., credential harvesting, BEC)."
+  },
+  {
+    "function": "PROTECT (PR)",
+    "category": "PR.DS",
+    "title": "Data Security",
+    "description": "Data at rest and in transit are secured through encryption, backups, and data loss prevention (DLP) configurations."
+  },
+  {
+    "function": "DETECT (DE)",
+    "category": "DE.CM",
+    "title": "Security Continuous Monitoring",
+    "description": "The network environment and physical facilities are monitored to identify potential cybersecurity events and threat signals."
+  },
+  {
+    "function": "RESPOND (RS)",
+    "category": "RS.MA",
+    "title": "Incident Management",
+    "description": "Response activities are initiated upon detection of a cybersecurity incident, ensuring proper documentation, analysis, containment, and communication."
+  }
+]

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=sqlite:////app/securecop365.db
+      - AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+      - AZURE_OPENAI_API_KEY=
+      - AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
+    volumes:
+      - ./apps/backend:/app
+      - db-data:/app/db
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+
+  teams-bot:
+    build:
+      context: ./apps/teams-bot
+      dockerfile: Dockerfile
+    ports:
+      - "3978:3978"
+    environment:
+      - BACKEND_API_URL=http://backend:8000/api/v1
+    depends_on:
+      - backend
+
+volumes:
+  db-data:

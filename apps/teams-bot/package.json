@@ -1,0 +1,19 @@
+{
+  "name": "securecop-365-teams-bot",
+  "version": "1.0.0",
+  "description": "Microsoft Teams Bot for SecureCopilot 365 AI Security Agent",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js"
+  },
+  "dependencies": {
+    "botbuilder": "^4.22.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

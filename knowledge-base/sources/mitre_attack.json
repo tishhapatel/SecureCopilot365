@@ -1,0 +1,27 @@
+[
+  {
+    "technique_id": "T1566",
+    "name": "Phishing",
+    "description": "Adversaries may send phishing messages to gain access to victim systems. All forms of phishing (email, links, attachments) aim to compromise credentials or execute code."
+  },
+  {
+    "technique_id": "T1566.001",
+    "name": "Spearphishing Attachment",
+    "description": "A sub-technique of phishing where adversaries send messages with malicious attachments (e.g. macro-enabled sheets, compressed files) to trigger user execution."
+  },
+  {
+    "technique_id": "T1566.002",
+    "name": "Spearphishing Link",
+    "description": "A sub-technique of phishing where email links lead to credential harvesting portals or exploit kits hosted on lookalike domains."
+  },
+  {
+    "technique_id": "T1598",
+    "name": "Social Engineering",
+    "description": "Adversaries may communicate with targets to gather intelligence or manipulate them into executing actions, such as authorization adjustments or wires."
+  },
+  {
+    "technique_id": "T1534",
+    "name": "Internal Spearphishing",
+    "description": "Adversaries may use compromised internal email accounts to send phishing emails to other employees within the same organization, bypassing standard external filters."
+  }
+]

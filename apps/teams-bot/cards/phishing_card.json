@@ -1,0 +1,105 @@
+{
+  "type": "AdaptiveCard",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.4",
+  "body": [
+    {
+      "type": "Container",
+      "style": "emphasis",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "🛡️ SecureCopilot 365 — Threat Alert",
+          "weight": "Bolder",
+          "size": "Medium",
+          "color": "Attention"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "Phishing Analysis Results",
+          "weight": "Bolder",
+          "size": "Large"
+        },
+        {
+          "type": "FactSet",
+          "facts": [
+            {
+              "title": "Subject:",
+              "value": "${emailSubject}"
+            },
+            {
+              "title": "Sender:",
+              "value": "${senderDomain}"
+            },
+            {
+              "title": "Risk Score:",
+              "value": "${riskScore} / 100"
+            },
+            {
+              "title": "Risk Level:",
+              "value": "${riskLevel}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "MITRE ATT&CK Techniques:",
+          "weight": "Bolder"
+        },
+        {
+          "type": "TextBlock",
+          "text": "${mitreTechniques}",
+          "wrap": true,
+          "fontType": "Monospace"
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "Key Indicators Detected:",
+          "weight": "Bolder"
+        },
+        {
+          "type": "TextBlock",
+          "text": "${indicators}",
+          "wrap": true
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Report to SOC",
+      "style": "destructive",
+      "data": {
+        "action": "report_soc",
+        "subject": "${emailSubject}",
+        "sender": "${senderDomain}"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Mark as Safe",
+      "style": "positive",
+      "data": {
+        "action": "mark_safe",
+        "subject": "${emailSubject}",
+        "sender": "${senderDomain}"
+      }
+    }
+  ]
+}
