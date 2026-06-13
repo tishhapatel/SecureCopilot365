@@ -1,0 +1,151 @@
+name: DevSecOps CI/CD Security Scan
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  bandit:
+    name: Bandit Python Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      - name: Run Bandit Scan
+        run: |
+          bandit -r apps/backend/ -ll -ii
+
+  semgrep:
+    name: Semgrep SAST Scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep Scan
+        run: semgrep scan --config auto
+
+  pip-audit:
+    name: Pip Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+
+      - name: Audit Python Dependencies
+        run: |
+          pip-audit -r apps/backend/requirements.txt
+
+  npm-audit:
+    name: NPM Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Audit Frontend Dependencies
+        run: |
+          cd apps/frontend
+          npm audit --audit-level=high || true
+
+      - name: Audit Teams Bot Dependencies
+        run: |
+          cd apps/teams-bot
+          npm audit --audit-level=high || true
+
+  trivy-backend:
+    name: Trivy Backend Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Backend Image
+        run: |
+          docker build -t securecopilot-backend:latest apps/backend/
+
+      - name: Run Trivy Scanner for Backend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'securecopilot-backend:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  trivy-frontend:
+    name: Trivy Frontend Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Frontend Image
+        run: |
+          docker build -t securecopilot-frontend:latest apps/frontend/
+
+      - name: Run Trivy Scanner for Frontend
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'securecopilot-frontend:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  trivy-teams-bot:
+    name: Trivy Teams Bot Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Teams Bot Image
+        run: |
+          docker build -t securecopilot-teams-bot:latest apps/teams-bot/
+
+      - name: Run Trivy Scanner for Teams Bot
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'securecopilot-teams-bot:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
