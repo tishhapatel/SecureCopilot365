@@ -30,19 +30,17 @@ jobs:
 
       - name: Run Bandit Scan
         run: |
-          bandit -r apps/backend/ -ll -ii
+          bandit -r apps/backend/ run_project.py knowledge-base/ingest.py -ll -ii
 
   semgrep:
     name: Semgrep SAST Scan
     runs-on: ubuntu-latest
-    container:
-      image: semgrep/semgrep
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Run Semgrep Scan
-        run: semgrep scan --config auto
+        run: docker run --rm -v "${{ github.workspace }}:/src" semgrep/semgrep semgrep scan --config auto
 
   pip-audit:
     name: Pip Dependency Audit

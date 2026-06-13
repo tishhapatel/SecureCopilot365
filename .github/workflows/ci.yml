@@ -17,6 +17,11 @@ jobs:
       TEST_MODE: "true"
       DATABASE_URL: "sqlite:///:memory:"
       APP_SECRET_KEY: "supersecretkeyatleast32characterslongforsecurity"
+      JWT_SECRET: "supersecretkeyatleast32characterslongforsecurity"
+      AZURE_OPENAI_ENDPOINT: "https://mock-openai.azure.com/"
+      AZURE_OPENAI_KEY: "mock_openai_key_placeholder"
+      GRAPH_CLIENT_ID: "mock-graph-client-id"
+      GRAPH_CLIENT_SECRET: "mock-graph-client-secret"
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -37,6 +42,12 @@ jobs:
       - name: Run Pytest with Coverage
         run: |
           python -m pytest --cov=apps/backend --cov-report=xml --cov-report=term-missing
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
 
   frontend-build:
     name: Frontend Build
@@ -61,6 +72,12 @@ jobs:
         run: |
           cd apps/frontend
           npm run build
+
+      - name: Upload Frontend Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/frontend/dist/
 
   teams-bot-build:
     name: Teams Bot Build
