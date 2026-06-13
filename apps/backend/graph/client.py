@@ -8,6 +8,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+MOCK_TOKEN = "mock_graph_access_token_12345"  # nosec B105
+
 class GraphClient:
     def __init__(self):
         self.tenant_id = os.getenv("ENTRA_TENANT_ID")
@@ -20,8 +22,8 @@ class GraphClient:
         Retrieves access token using client credentials grant.
         Returns a mock token if parameters are not configured.
         """
-        if not all([self.tenant_id, self.client_id, self.client_secret]) or "mock" in self.tenant_id:
-            return "mock_graph_access_token_12345"
+        if not all([self.tenant_id, self.client_id, self.client_secret]) or "mock" in (self.tenant_id or ""):
+            return MOCK_TOKEN
             
         url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
         data = {
@@ -39,7 +41,7 @@ class GraphClient:
             except Exception as e:
                 logger.error(f"Failed to fetch Graph API access token: {e}")
                 
-        return "mock_graph_access_token_12345"
+        return MOCK_TOKEN
 
     async def collect_audit_evidence(self, tenant_id: str) -> dict:
         """

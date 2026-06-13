@@ -3,7 +3,7 @@ Microsoft Graph Client — SharePoint / OneDrive Operations
 """
 import httpx
 import logging
-from graph.client import GraphClient
+from graph.client import GraphClient, MOCK_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class GraphSharePoint(GraphClient):
         Retrieves policy file content or metadata from SharePoint.
         """
         token = await self.get_access_token()
-        if token == "mock_graph_access_token_12345":
+        if token == MOCK_TOKEN:
             return self._mock_document(file_id)
 
         headers = {"Authorization": f"Bearer {token}"}

@@ -3,7 +3,7 @@ Microsoft Graph Client — User Operations
 """
 import httpx
 import logging
-from graph.client import GraphClient
+from graph.client import GraphClient, MOCK_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class GraphUsers(GraphClient):
         Falls back to local mock data if authentication fails.
         """
         token = await self.get_access_token()
-        if token == "mock_graph_access_token_12345":
+        if token == MOCK_TOKEN:
             return self._mock_user_profile(user_id)
             
         headers = {"Authorization": f"Bearer {token}"}

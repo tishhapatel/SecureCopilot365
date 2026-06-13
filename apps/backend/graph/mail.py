@@ -3,7 +3,7 @@ Microsoft Graph Client — Mail Operations
 """
 import httpx
 import logging
-from graph.client import GraphClient
+from graph.client import GraphClient, MOCK_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class GraphMail(GraphClient):
         Falls back to realistic mock phishing email.
         """
         token = await self.get_access_token()
-        if token == "mock_graph_access_token_12345":
+        if token == MOCK_TOKEN:
             return self._mock_message(message_id)
 
         headers = {"Authorization": f"Bearer {token}"}

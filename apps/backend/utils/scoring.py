@@ -67,8 +67,8 @@ def calculate_vendor_risk_score(
                 pen_test_risk = 30.0 # Medium risk
             else:
                 pen_test_risk = 60.0 # High risk
-        except:
-            pass
+        except (ValueError, TypeError):
+            pen_test_risk = 80.0 # Default high risk on invalid date format
 
     # 3. Incident history
     incident_risk = 0.0

@@ -71,11 +71,12 @@ async def create_scim_user(
     if existing:
         raise HTTPException(status_code=409, detail="User already exists in directory")
 
+    import secrets
     # Sync using standard CRUD schema
     user_schema = schemas.UserCreate(
         email=payload.userName,
         display_name=payload.name.formatted,
-        password="TemporaryPassword123!", # Randomly generated or local initial
+        password=f"Temp_{secrets.token_urlsafe(12)}!", # Secure randomly generated initial password
         role_name="General Employee",
         department=payload.department
     )

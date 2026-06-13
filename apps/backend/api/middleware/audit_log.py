@@ -2,10 +2,13 @@
 Immutable Audit Logging Middleware
 """
 import hashlib
+import logging
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from db.database import SessionLocal
 from db.models import AuditLog
+
+logger = logging.getLogger(__name__)
 
 class AuditLogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -55,9 +58,9 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             )
             db.add(log_entry)
             db.commit()
-        except Exception:
-            # Silence logging write failures to avoid breaking primary requests
-            pass
+        except Exception as e:
+            # Silence logging write failures to avoid breaking primary requests, but log the error
+            logger.error(f"Audit log write failed: {e}")
         finally:
             db.close()
 

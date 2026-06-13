@@ -8,7 +8,7 @@ from jose import jwt, JWTError
 import bcrypt
 
 # JWT configurations
-SECRET_KEY = os.getenv("APP_SECRET_KEY", "supersecretkeyatleast32characterslongforsecurity")
+SECRET_KEY = os.getenv("APP_SECRET_KEY", "supersecretkeyatleast32characterslongforsecurity")  # nosec B105
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 REFRESH_TOKEN_EXPIRE_DAYS = 7

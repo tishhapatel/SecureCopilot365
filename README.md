@@ -20,7 +20,7 @@ SecureCopilot 365 is a production-ready, enterprise-grade AI Cybersecurity, Comp
 ![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Framework-green)
 ![React](https://img.shields.io/badge/React-18-cyan)
-![TypeScript](https://img.shields.io/badge/TypeScript-Linguistic-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-Language-blue)
 ![Azure](https://img.shields.io/badge/Azure-Cloud_Services-purple)
 ![Microsoft 365](https://img.shields.io/badge/M365-Copilot_Integrations-orange)
 ![CI/CD](https://img.shields.io/badge/GitHub_Actions-Passing-brightgreen)
@@ -75,29 +75,29 @@ For detailed specifications, see our [System Architecture Documentation](docs/ar
 ## 🤖 Agent Architecture
 
 SecureCopilot 365 divides reasoning tasks across a micro-agent team managed by a central orchestrator:
-*   **Orchestrator Agent ([orchestrator.py](file:///d:/SecureCopilot365/apps/backend/agents/orchestrator.py))**: Classifies incoming requests, extracts properties, and routes payloads to specialized sub-agents.
-*   **Phishing Agent ([phishing_agent.py](file:///d:/SecureCopilot365/apps/backend/agents/phishing_agent.py))**: Evaluates email headers, sender domains, links, and body content for fraud indicators.
-*   **Compliance Agent ([compliance_agent.py](file:///d:/SecureCopilot365/apps/backend/agents/compliance_agent.py))**: Evaluates policy drafts and contracts against GDPR requirements and ISO controls.
-*   **Vendor Agent ([vendor_agent.py](file:///d:/SecureCopilot365/apps/backend/agents/vendor_agent.py))**: Evaluates third-party risk profiles and security certifications.
-*   **Audit Agent ([audit_agent.py](file:///d:/SecureCopilot365/apps/backend/agents/audit_agent.py))**: Evaluates configuration states and retrieves compliance evidence logs.
-*   **Security Coach Agent ([awareness_agent.py](file:///d:/SecureCopilot365/apps/backend/agents/awareness_agent.py))**: Delivers role-relevant cybersecurity quizzes and awareness training.
+*   **Orchestrator Agent ([orchestrator.py](apps/backend/agents/orchestrator.py))**: Classifies incoming requests, extracts properties, and routes payloads to specialized sub-agents.
+*   **Phishing Agent ([phishing_agent.py](apps/backend/agents/phishing_agent.py))**: Evaluates email headers, sender domains, links, and body content for fraud indicators.
+*   **Compliance Agent ([compliance_agent.py](apps/backend/agents/compliance_agent.py))**: Evaluates policy drafts and contracts against GDPR requirements and ISO controls.
+*   **Vendor Agent ([vendor_agent.py](apps/backend/agents/vendor_agent.py))**: Evaluates third-party risk profiles and security certifications.
+*   **Audit Agent ([audit_agent.py](apps/backend/agents/audit_agent.py))**: Evaluates configuration states and retrieves compliance evidence logs.
+*   **Security Coach Agent ([awareness_agent.py](apps/backend/agents/awareness_agent.py))**: Delivers role-relevant cybersecurity quizzes and awareness training.
 
 ---
 
 ## 🧠 Microsoft IQ Integration
 
-*   **Foundry IQ ([foundry_iq.py](file:///d:/SecureCopilot365/apps/backend/iq/foundry_iq.py))**: The compliance knowledge base retriever. It queries Azure AI Search vector indexes (falling back to local JSON files) and enforces role-based RAG filters on retrieved chunks. See [Foundry IQ Documentation](docs/foundry-iq.md).
-*   **Work IQ ([work_iq.py](file:///d:/SecureCopilot365/apps/backend/iq/work_iq.py))**: The context engine. It connects to Microsoft Graph APIs to fetch employee profiles, emails, Teams conversations, calendar events, and SharePoint document attributes. See [Work IQ Documentation](docs/work-iq.md).
-*   **Fabric IQ ([fabric_iq.py](file:///d:/SecureCopilot365/apps/backend/iq/fabric_iq.py))**: The business knowledge graph. It maps relationships between employees, vendors, risks, incidents, and GRC controls. See [Fabric IQ Documentation](docs/fabric-iq.md).
+*   **Foundry IQ ([foundry_iq.py](apps/backend/iq/foundry_iq.py))**: The compliance knowledge base retriever. It queries Azure AI Search vector indexes (falling back to local JSON files) and enforces role-based RAG filters on retrieved chunks. See [Foundry IQ Documentation](docs/foundry-iq.md).
+*   **Work IQ ([work_iq.py](apps/backend/iq/work_iq.py))**: The context engine. It connects to Microsoft Graph APIs to fetch employee profiles, emails, Teams conversations, calendar events, and SharePoint document attributes. See [Work IQ Documentation](docs/work-iq.md).
+*   **Fabric IQ ([fabric_iq.py](apps/backend/iq/fabric_iq.py))**: The business knowledge graph. It maps relationships between employees, vendors, risks, incidents, and GRC controls. See [Fabric IQ Documentation](docs/fabric-iq.md).
 
 ---
 
 ## 🤝 Copilot Integration
 
 SecureCopilot 365 is ready for integration as an Enterprise Agent in Microsoft 365:
-*   **Declarative Agent Manifest ([declarativeAgentManifest.json](file:///d:/SecureCopilot365/apps/teams-bot/manifest/declarativeAgentManifest.json))**: Declares agent behaviors and registered actions.
-*   **Plugin Actions ([vendor_risk_plugin.json](file:///d:/SecureCopilot365/apps/teams-bot/manifest/vendor_risk_plugin.json))**: Maps actions to REST endpoints.
-*   **OpenAPI Specifications ([openapi_definition.yaml](file:///d:/SecureCopilot365/apps/teams-bot/manifest/openapi_definition.yaml))**: Exposes endpoints to M365 Copilot.
+*   **Declarative Agent Manifest ([declarativeAgentManifest.json](apps/teams-bot/manifest/declarativeAgentManifest.json))**: Declares agent behaviors and registered actions.
+*   **Plugin Actions ([vendor_risk_plugin.json](apps/teams-bot/manifest/vendor_risk_plugin.json))**: Maps actions to REST endpoints.
+*   **OpenAPI Specifications ([openapi_definition.yaml](apps/teams-bot/manifest/openapi_definition.yaml))**: Exposes endpoints to M365 Copilot.
 
 See our [Copilot Integration Guide](docs/copilot-integration.md) for more details.
 
@@ -214,7 +214,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
-Create a `.env` file using the template [apps/backend/.env.example](file:///d:/SecureCopilot365/apps/backend/.env.example).
+Create a `.env` file using the template [apps/backend/.env.example](apps/backend/.env.example).
 
 #### 2. Seed Compliance Knowledge Base
 ```bash
