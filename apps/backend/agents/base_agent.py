@@ -69,11 +69,51 @@ class BaseAgent(ABC):
     ) -> str:
         """
         Core LLM call with RAG context injection.
+        Enforces Explainable AI JSON schema output formatting constraints while maintaining backwards compatibility.
         Low temperature (0.1) ensures consistent, factual security analysis.
         If Azure OpenAI is not configured, generates a simulated output based on the agent type.
         """
+        # Append Explainable AI formatting instructions to the system prompt
+        explainability_instruction = (
+            "\n\nCRITICAL: You MUST output your response strictly as a JSON object matching the following schema. "
+            "You MUST include all fields, combining both new Explainable AI keys and legacy attributes for compatibility:\n"
+            "{\n"
+            '  "finding": "Summary verdict of the analysis",\n'
+            '  "reasoning": "Step-by-step description of how you derived the verdict.",\n'
+            '  "evidence": [\n'
+            "    {\n"
+            '      "source": "Document name, email sender, or API endpoint source",\n'
+            '      "extract": "Direct text snippet or telemetry value supporting finding",\n'
+            '      "reliability": "high | medium | low"\n'
+            "    }\n"
+            "  ],\n"
+            '  "sources": ["Citations, regulatory clauses, or framework identifiers (e.g. ISO 27001 Annex A.8.24)"],\n'
+            '  "confidence_score": 0.0-1.0,\n'
+            '  "recommended_action": "Actionable next steps to address the finding.",\n'
+            '  "risk_score": 0-100,\n'
+            '  "risk_level": "low | medium | high | critical",\n'
+            '  "verdict": "phishing | bec_attempt | safe" (only for phishing agent),\n'
+            '  "indicators": [] (only for phishing agent),\n'
+            '  "compliance_score": 0-100 (only for compliance advisor),\n'
+            '  "gaps": [] (only for compliance advisor),\n'
+            '  "pii_detected": true | false (only for compliance advisor),\n'
+            '  "findings": [] (only for vendor risk agent),\n'
+            '  "risk_tier": "low | medium | high" (only for vendor risk agent),\n'
+            '  "overall_readiness_score": 0-100 (only for audit readiness agent),\n'
+            '  "controls_summary": {} (only for audit readiness agent),\n'
+            '  "critical_gaps": [] (only for audit readiness agent),\n'
+            '  "interactive_scenario": {} (only for security awareness coach),\n'
+            '  "quiz": {} (only for security awareness coach)\n'
+            "}"
+        )
+        
+        # Don't apply formatting schema to the Master Orchestrator, which has its own routing format
+        effective_system_prompt = system_prompt
+        if "Master Orchestrator" not in system_prompt:
+            effective_system_prompt += explainability_instruction
+
         if self.client is not None:
-            messages = [{"role": "system", "content": system_prompt}]
+            messages = [{"role": "system", "content": effective_system_prompt}]
             if context_chunks:
                 context_text = "\n\n---\n\n".join(context_chunks)
                 messages.append({
@@ -87,70 +127,106 @@ class BaseAgent(ABC):
                     messages=messages,
                     max_tokens=max_tokens,
                     temperature=temperature,
-                    response_format={"type": "text"}
+                    response_format={"type": "json_object" if "Master Orchestrator" not in system_prompt else "text"}
                 )
                 return response.choices[0].message.content
             except Exception as e:
                 logger.error(f"LLM call failed: {e}. Falling back to mock generator.")
         
         # Mock responses generator for development/demonstration
-        return self._generate_mock_response(system_prompt, user_message)
+        return self._generate_mock_response(effective_system_prompt, user_message)
 
     def _generate_mock_response(self, system_prompt: str, user_message: str) -> str:
-        """Generates realistic mock agent responses to support sandbox run."""
+        """Generates realistic mock agent responses adhering to the Explainable AI format."""
         
         # 1. Phishing Detection Agent Mock
         if "Phishing Detection Agent" in system_prompt:
-            verdict = "phishing"
-            score = 85
-            if "invoice" in user_message.lower() or "wire" in user_message.lower():
-                verdict = "bec_attempt"
-                score = 92
-            elif "safe" in user_message.lower() or "newsletter" in user_message.lower():
-                verdict = "safe"
-                score = 12
-
-            indicators = []
-            if verdict != "safe":
-                indicators = [
-                    {
-                        "category": "Social Engineering",
-                        "description": "Urgent language requesting sensitive financial transactions was detected.",
-                        "severity": "high",
-                        "mitre_technique": "T1598 — Social Engineering"
-                    },
-                    {
-                        "category": "Header Anomaly",
-                        "description": "Reply-To mismatch detected relative to the sender's domain.",
-                        "severity": "medium",
-                        "mitre_technique": "T1566.002 — Spearphishing Link"
-                    }
-                ]
+            score = 92 if ("invoice" in user_message.lower() or "wire" in user_message.lower() or "password has expired" in user_message.lower()) else 12
+            verdict = "bec_attempt" if score > 50 else "safe"
+            
+            if verdict == "bec_attempt":
+                return json.dumps({
+                    "finding": f"Phishing/BEC Attempt Detected (Risk Score: {score}/100 - CRITICAL)",
+                    "reasoning": "The email represents a Business Email Compromise (BEC) attempt impersonating the CFO from a Gmail domain requesting an urgent wire transfer.",
+                    "evidence": [
+                        {
+                            "source": "email_sender",
+                            "extract": "external.cfo.office@gmail.com",
+                            "reliability": "high"
+                        },
+                        {
+                            "source": "email_body",
+                            "extract": "verify these updated bank routing numbers... processed in 2 hours to avoid penalty fees",
+                            "reliability": "high"
+                        }
+                    ],
+                    "sources": [
+                        "MITRE ATT&CK T1566.002 - Spearphishing Link",
+                        "MITRE ATT&CK T1598 - Social Engineering",
+                        "NIST CSF PR.AT-1 - Security Awareness"
+                    ],
+                    "confidence_score": 0.95,
+                    "recommended_action": "Block the sender domain, report the email to SOC immediately, and alert the finance department of the spoofing attempt.",
+                    "risk_score": score,
+                    "risk_level": "critical",
+                    "verdict": verdict,
+                    "summary": "Urgent wire transfer request impersonating financial authority.",
+                    "indicators": [
+                        {
+                            "category": "Social Engineering",
+                            "description": "Urgent language requesting sensitive financial transactions was detected.",
+                            "severity": "high",
+                            "mitre_technique": "T1598 — Social Engineering"
+                        }
+                    ],
+                    "mitre_techniques": ["T1566.002", "T1598"],
+                    "report_to_soc": True,
+                    "citations": ["MITRE ATT&CK T1566.002", "NIST PR.AT-1"]
+                }, indent=2)
             else:
-                indicators = [
-                    {
-                        "category": "Safe",
-                        "description": "No critical phishing markers detected.",
-                        "severity": "low",
-                        "mitre_technique": None
-                    }
-                ]
-
-            return json.dumps({
-                "risk_score": score,
-                "risk_level": "low" if score < 30 else "medium" if score < 60 else "high" if score < 80 else "critical",
-                "verdict": verdict,
-                "summary": "Urgent wire transfer request impersonating financial authority." if verdict == "bec_attempt" else "Suspicious email containing deceptive links." if verdict == "phishing" else "Safe communication.",
-                "indicators": indicators,
-                "mitre_techniques": ["T1566.002", "T1598"] if verdict != "safe" else [],
-                "recommended_action": "Do not click on links or reply. Forward to IT Security." if verdict != "safe" else "Safe to proceed.",
-                "report_to_soc": verdict != "safe",
-                "citations": ["MITRE ATT&CK T1566.002", "NIST PR.AT-1"] if verdict != "safe" else []
-            }, indent=2)
+                return json.dumps({
+                    "finding": "Communication Assessed as Safe (Risk Score: 12/100)",
+                    "reasoning": "No threat indicators, urgency markers, or sender reputation anomalies were detected in the analyzed message context.",
+                    "evidence": [
+                        {
+                            "source": "email_sender",
+                            "extract": "secops@enterprise.com",
+                            "reliability": "high"
+                        }
+                    ],
+                    "sources": [
+                        "NIST CSF PR.AT-1 - Security Awareness"
+                    ],
+                    "confidence_score": 0.90,
+                    "recommended_action": "Safe to proceed with normal communications.",
+                    "risk_score": 12,
+                    "risk_level": "low",
+                    "verdict": "safe",
+                    "summary": "Safe communication.",
+                    "indicators": [],
+                    "mitre_techniques": [],
+                    "report_to_soc": False,
+                    "citations": []
+                }, indent=2)
 
         # 2. Compliance Advisor Agent Mock
         elif "Compliance Advisor Agent" in system_prompt:
             return json.dumps({
+                "finding": "Compliance Gap Identified (Compliance Score: 68/100)",
+                "reasoning": "The uploaded Information Security Policy draft lacks a data breach notification clause required by GDPR Article 33 and cryptography standards details required by ISO 27001 Annex A.8.24.",
+                "evidence": [
+                    {
+                        "source": "Information_Security_Policy_Draft.docx",
+                        "extract": "No breach notification timeline or cryptographic rules defined.",
+                        "reliability": "high"
+                    }
+                ],
+                "sources": [
+                    "GDPR Article 33 - Notification of personal data breach",
+                    "ISO 27001 A.8.24 - Use of cryptography"
+                ],
+                "confidence_score": 0.88,
+                "recommended_action": "Insert GDPR compliance clause: 'Vendor shall notify Controller within 24 hours of becoming aware of a personal data breach' and specify AES-256 standard encryption for all data at rest.",
                 "document_summary": "Corporate Information Security Policy draft",
                 "frameworks_assessed": ["ISO27001", "GDPR"],
                 "compliance_score": 68,
@@ -164,16 +240,6 @@ class BaseAgent(ABC):
                         "risk_level": "critical",
                         "remediation": "Add clause: 'Vendor shall notify Controller within 24 hours of becoming aware of a personal data breach, per GDPR Article 33(1).'",
                         "citation": "GDPR Article 33 — Notification of a personal data breach to the supervisory authority"
-                    },
-                    {
-                        "id": "GAP-002",
-                        "framework": "ISO27001",
-                        "control_ref": "A.8.24",
-                        "title": "Use of cryptography controls",
-                        "description": "Encryption standards for data at rest are not defined.",
-                        "risk_level": "high",
-                        "remediation": "Specify: 'All company data stored at rest must be encrypted using AES-256 standards.'",
-                        "citation": "ISO 27001 A.8.24 — Use of cryptography"
                     }
                 ],
                 "data_handling_risks": ["GDPR breach risk due to missing notification timeline"],
@@ -186,6 +252,21 @@ class BaseAgent(ABC):
         # 3. Vendor Risk Agent Mock
         elif "Vendor Risk Agent" in system_prompt:
             return json.dumps({
+                "finding": "Vendor Risk Rating: HIGH (Risk Score: 58/100)",
+                "reasoning": "Vendor processes customer PII but lacks SOC 2 Type II certification, exposing the organization to compliance risks.",
+                "evidence": [
+                    {
+                        "source": "vendor_profile",
+                        "extract": "SOC 2 Type II: False, PII data accessed: True",
+                        "reliability": "high"
+                    }
+                ],
+                "sources": [
+                    "ISO 27001 A.5.19 - Supplier relationships",
+                    "GDPR Article 28 - Processor compliance requirements"
+                ],
+                "confidence_score": 0.91,
+                "recommended_action": "Request SOC 2 Type II report or require the vendor to sign a specific Data Processing Addendum (DPA) with audit rights.",
                 "vendor_name": "SaaS Platform Corp",
                 "risk_score": 58,
                 "risk_tier": "medium",
@@ -214,6 +295,20 @@ class BaseAgent(ABC):
         # 4. Audit Readiness Agent Mock
         elif "Audit Readiness Agent" in system_prompt:
             return json.dumps({
+                "finding": "ISO 27001 Audit Readiness Score: 74/100 (MOSTLY READY)",
+                "reasoning": "Baseline controls are mapped, but a critical gap is identified in Control A.8.8 due to missing vulnerability scanning evidence.",
+                "evidence": [
+                    {
+                        "source": "SharePoint / compliance-evidence",
+                        "extract": "No quarterly vulnerability scan reports found.",
+                        "reliability": "high"
+                    }
+                ],
+                "sources": [
+                    "ISO 27001 A.8.8 - Management of technical vulnerabilities"
+                ],
+                "confidence_score": 0.93,
+                "recommended_action": "Configure Qualys/Nessus automated scanning reports to sync and upload to the compliance folder.",
                 "framework": "ISO27001",
                 "overall_readiness_score": 74,
                 "readiness_band": "mostly_ready",
@@ -251,6 +346,21 @@ class BaseAgent(ABC):
         # 5. Security Awareness Coach Agent Mock
         elif "Security Awareness Coach Agent" in system_prompt:
             return json.dumps({
+                "finding": "Security Quiz: Business Email Compromise (BEC)",
+                "reasoning": "Interactive training scenario to educate billing specialists on wire transfer scam emails and CEO impersonation.",
+                "evidence": [
+                    {
+                        "source": "awareness_module",
+                        "extract": "Role-relevance: Finance Specialists",
+                        "reliability": "high"
+                    }
+                ],
+                "sources": [
+                    "ISO 27001 A.6.3 - Information security awareness, education and training",
+                    "NIST CSF PR.AT-1 - Awareness training"
+                ],
+                "confidence_score": 0.95,
+                "recommended_action": "Explain the scenario where CEO/CFO requests a transfer, and test the user with standard email-checking options.",
                 "topic": "Business Email Compromise (BEC)",
                 "learning_objective": "Identify wire transfer scam emails and CEO impersonation attempts.",
                 "role_relevance": "High relevance for finance departments and billing managers.",
@@ -267,19 +377,30 @@ class BaseAgent(ABC):
                     "correct_option_index": 2,
                     "explanation": "CEO/CFO impersonation scams commonly use free email accounts (like Gmail) with mismatched display names. Always verify out-of-band and report using SecureCopilot."
                 },
-                "key_takeaway": "Never make bank account modifications based solely on email instructions. Always verify through a phone call or official internal channel.",
-                "citations": ["ISO 27001 A.6.3 — Information security awareness, education and training", "NIST CSF PR.AT-1"]
+                "quiz": {
+                    "question": "You receive an email from 'CFO Display Name <cfo.company.executive@gmail.com>' marked URGENT.",
+                    "options": [
+                        "Reply immediately requesting the contract copy.",
+                        "Change the bank details in the billing system and initiate the wire transfer.",
+                        "Verify the sender's actual email address, spot the Gmail domain, and report the email via the SecureCopilot Outlook add-in.",
+                        "Ignore the email completely."
+                    ],
+                    "correct_option_index": 2,
+                    "explanation": "CEO/CFO impersonation scams commonly use free email accounts (like Gmail) with mismatched display names. Always verify out-of-band and report using SecureCopilot."
+                },
+                "key_takeaway": "Never make bank account modifications based solely on email instructions. Always verify through a phone call or official internal channel."
             }, indent=2)
 
         # 6. Master Orchestrator Agent Mock
         else:
-            # Fallback chat/orchestration response
             return json.dumps({
                 "selected_agent": "phishing",
                 "confidence": 0.95,
                 "routing_rationale": "Request asks to scan an email for threat indicators.",
                 "redirect_suggested": None
             })
+
+
 
     @abstractmethod
     async def analyze(self, input_data: dict, user_context: dict) -> dict:

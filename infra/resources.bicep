@@ -7,6 +7,9 @@ param openAiName string
 param searchName string
 param keyVaultName string
 
+@secure()
+param administratorLoginPassword string
+
 // 1. App Service Plan (Linux)
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: 'plan-securecop365'
@@ -91,9 +94,12 @@ resource searchService 'Microsoft.Search/searchServices@2022-09-01' = {
 resource sqlServer 'Microsoft.Sql/servers@2021-11-01' = {
   name: sqlServerName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     administratorLogin: 'sqladmin'
-    administratorLoginPassword: 'SuperSecurePass123!' // Replace in production/KV
+    administratorLoginPassword: administratorLoginPassword
   }
 }
 
@@ -105,6 +111,22 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2021-11-01' = {
     name: 'Basic'
     tier: 'Basic'
     capacity: 5
+  }
+}
+
+resource transparentDataEncryption 'Microsoft.Sql/servers/databases/transparentDataEncryption@2021-11-01' = {
+  parent: sqlDatabase
+  name: 'current'
+  properties: {
+    state: 'Enabled'
+  }
+}
+
+resource dbConnSecret 'Microsoft.KeyVault/vaults/secrets@2022-07-01' = {
+  parent: keyVault
+  name: 'DatabaseConnectionString'
+  properties: {
+    value: 'mssql+pyodbc://sqladmin:${administratorLoginPassword}@${sqlServer.properties.fullyQualifiedDomainName}/db-securecop365?driver=ODBC+Driver+18+for+SQL+Server'
   }
 }
 
@@ -122,6 +144,9 @@ resource firewallRules 'Microsoft.Sql/servers/firewallRules@2021-11-01' = {
 resource backendApp 'Microsoft.Web/sites@2022-03-01' = {
   name: backendAppName
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
@@ -133,7 +158,7 @@ resource backendApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'DATABASE_URL'
-          value: 'mssql+pyodbc://sqladmin:SuperSecurePass123!@${sqlServer.properties.fullyQualifiedDomainName}/db-securecop365?driver=ODBC+Driver+18+for+SQL+Server'
+          value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=${dbConnSecret.name})'
         }
         {
           name: 'AZURE_OPENAI_ENDPOINT'
@@ -149,6 +174,27 @@ resource backendApp 'Microsoft.Web/sites@2022-03-01' = {
         }
       ]
     }
+  }
+}
+
+// 7. Role Assignments for Secrets Access
+resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, backendApp.name, 'KeyVaultSecretsUser')
+  scope: keyVault
+  properties: {
+    principalId: backendApp.identity.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '463301a3-b73f-4f91-ba97-a57750e3b0a0')
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource sqlServerKeyVaultAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, sqlServer.name, 'KeyVaultSecretsUser')
+  scope: keyVault
+  properties: {
+    principalId: sqlServer.identity.principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '463301a3-b73f-4f91-ba97-a57750e3b0a0')
+    principalType: 'ServicePrincipal'
   }
 }
 

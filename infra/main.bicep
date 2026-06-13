@@ -18,6 +18,9 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
+@secure()
+param administratorLoginPassword string
+
 module resources './resources.bicep' = {
   name: 'securecopilot-deploy'
   scope: resourceGroup
@@ -30,5 +33,6 @@ module resources './resources.bicep' = {
     openAiName: openAiName
     searchName: searchName
     keyVaultName: keyVaultName
+    administratorLoginPassword: administratorLoginPassword
   }
 }

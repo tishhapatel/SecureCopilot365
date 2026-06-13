@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.0/schema.json",
+  "id": "securecopilot365-agent",
+  "name": "SecureCopilot 365",
+  "description": "AI Digital CISO assisting with phishing analysis, vendor risk reviews, and ISO27001 readiness.",
+  "instructions": "You represent the SecureCopilot 365 Enterprise Agent. Help users evaluate security, look up vendor risk, identify phishing attempts, and generate compliance reports by calling the registered API plugin actions.",
+  "actions": [
+    {
+      "id": "vendor-risk-analysis",
+      "file": "vendor_risk_plugin.json"
+    },
+    {
+      "id": "compliance-review",
+      "file": "compliance_plugin.json"
+    }
+  ]
+}

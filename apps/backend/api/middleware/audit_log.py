@@ -18,23 +18,40 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
 
         # Fetch authenticated user profile if available
         user = getattr(request.state, "user", None)
-        user_id = user.get("entra_id") if user else "anonymous"
-        
-        # Protect PII by storing a hash of the URL request details
-        path_bytes = f"{request.method} {request.url.path}".encode('utf-8')
-        query_hash = hashlib.sha256(path_bytes).hexdigest()
-        
+        user_entra_id = user.get("entra_id") if user else "anonymous"
+        user_db_id = user.get("id") if user else None
+        tenant_id = user.get("tenant_id", "default_tenant") if user else "default_tenant"
+        client_ip = request.client.host if request.client else "127.0.0.1"
+        action_name = f"{request.method} {request.url.path}"
+
         db = SessionLocal()
         try:
+            # Retrieve previous audit log entry for the tenant to build the chain
+            last_log = db.query(AuditLog).filter(AuditLog.tenant_id == tenant_id).order_by(AuditLog.timestamp.desc()).first()
+            prev_hash = last_log.query_hash if last_log and last_log.query_hash else "0" * 64
+            
+            # Compute current block hash: SHA-256(Action || UserID || ClientIP || PrevHash)
+            raw_payload = f"{action_name}|{user_db_id}|{client_ip}|{prev_hash}"
+            current_hash = hashlib.sha256(raw_payload.encode('utf-8')).hexdigest()
+
+            # Classify risk level based on access path
+            risk_level = "low"
+            if "admin" in request.url.path.lower() or request.method in ["POST", "PUT", "DELETE"]:
+                risk_level = "medium"
+            if "delete" in request.url.path.lower() or "deactivate" in request.url.path.lower():
+                risk_level = "high"
+
             log_entry = AuditLog(
-                user_entra_id=user_id,
-                action=f"{request.method} {request.url.path}",
-                agent=request.url.path.split("/")[-1],
-                query_hash=query_hash,
-                response_category="API Query Log",
-                risk_level="low",
-                ip_address=request.client.host if request.client else "127.0.0.1",
-                user_agent=request.headers.get("user-agent", "Unknown")
+                user_entra_id=user_entra_id,
+                user_id=user_db_id,
+                action=action_name,
+                agent=request.url.path.split("/")[-1] or "gateway",
+                query_hash=current_hash,
+                response_category="SaaS Audit Chain",
+                risk_level=risk_level,
+                ip_address=client_ip,
+                user_agent=request.headers.get("user-agent", "Unknown"),
+                tenant_id=tenant_id
             )
             db.add(log_entry)
             db.commit()
@@ -45,3 +62,4 @@ class AuditLogMiddleware(BaseHTTPMiddleware):
             db.close()
 
         return response
+

@@ -4,11 +4,12 @@ const BASE_URL = '/api/v1';
 
 async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
+  const token = localStorage.getItem('securecop_access_token');
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer mock-token-12345',
+      'Authorization': token ? `Bearer ${token}` : 'Bearer mock-token-12345',
       ...(options?.headers || {})
     }
   });
@@ -117,6 +118,60 @@ export const api = {
     return await fetchJson<any>('/agents/chat', {
       method: 'POST',
       body: JSON.stringify({ query, file_data: fileData })
+    });
+  },
+
+  getUsers: async (): Promise<any[]> => {
+    return await fetchJson<any[]>('/auth/users');
+  },
+
+  createUser: async (userData: any): Promise<any> => {
+    return await fetchJson<any>('/auth/users', {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    });
+  },
+
+  updateUserRole: async (userId: string, roleName: string): Promise<any> => {
+    return await fetchJson<any>(`/auth/users/${userId}/role`, {
+      method: 'PUT',
+      body: JSON.stringify({ role_name: roleName })
+    });
+  },
+
+  updateUserActivation: async (userId: string, isActive: boolean): Promise<any> => {
+    return await fetchJson<any>(`/auth/users/${userId}/activation`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_active: isActive })
+    });
+  },
+
+  deleteUser: async (userId: string): Promise<any> => {
+    return await fetchJson<any>(`/auth/users/${userId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  getRoles: async (): Promise<any[]> => {
+    return await fetchJson<any[]>('/auth/roles');
+  },
+
+  getAuditLogs: async (): Promise<any[]> => {
+    return await fetchJson<any[]>('/auth/audit_logs');
+  },
+
+  verifyAuditLedger: async (): Promise<any> => {
+    return await fetchJson<any>('/audit/verify-ledger');
+  },
+
+  getDataResidency: async (): Promise<any> => {
+    return await fetchJson<any>('/auth/data-residency');
+  },
+
+  updateDataResidency: async (region: string): Promise<any> => {
+    return await fetchJson<any>('/auth/data-residency', {
+      method: 'POST',
+      body: JSON.stringify({ region })
     });
   }
 };

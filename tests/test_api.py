@@ -23,21 +23,58 @@ def setup_db():
     # Create tables
     Base.metadata.create_all(bind=engine)
     
-    # Seed default employee for testing routes
     db = SessionLocal()
     from db import models
     from datetime import datetime
+    from auth.roles import ALL_ROLES
+    from auth.permissions import ALL_PERMISSIONS, ROLE_PERMISSIONS
+    from auth.jwt_handler import hash_password
+    
+    # 1. Seed permissions
+    permission_map = {}
+    for perm in ALL_PERMISSIONS:
+        db_perm = models.Permission(permission_name=perm["name"], module=perm["module"])
+        db.add(db_perm)
+        db.flush()
+        permission_map[perm["name"]] = db_perm
+        
+    # 2. Seed roles
+    role_map = {}
+    for r_name in ALL_ROLES:
+        db_role = models.Role(role_name=r_name, description=f"{r_name} system role")
+        db.add(db_role)
+        db.flush()
+        role_map[r_name] = db_role
+        
+        target_perms = ROLE_PERMISSIONS.get(r_name, [])
+        db_role.permissions = [permission_map[p] for p in target_perms if p in permission_map]
+    db.commit()
+
+    # Seed default employee for testing routes
     emp = models.Employee(
         entra_id="mock-entra-id-123",
         display_name="Tisha Patel",
-        email="tisha.patel@enterprise.com",
-        department="Finance",
-        job_title="Billing Specialist",
+        email="ciso@securecop.com",  # Match user email to link them
+        department="Security",
+        job_title="CISO",
         risk_score=35.0,
         awareness_score=82.0,
         last_training_date=datetime.utcnow()
     )
     db.add(emp)
+    
+    # Seed CISO User
+    ciso_role = role_map["CISO"]
+    user_obj = models.User(
+        email="ciso@securecop.com",
+        display_name="Tisha Patel",
+        password_hash=hash_password("password123"),
+        role_id=ciso_role.id,
+        department="Security",
+        tenant_id="default_tenant",
+        is_active=True
+    )
+    db.add(user_obj)
     db.commit()
     db.close()
     yield
@@ -51,15 +88,27 @@ def setup_db():
     except Exception:
         pass
 
+def get_auth_headers(email: str, password: str = "password123") -> dict:
+    """Helper to authenticate a user and return request headers."""
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": email, "password": password}
+    )
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
 def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "healthy"
 
 def test_agents_chat_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     response = client.post(
         "/api/v1/agents/chat",
-        json={"query": "Scan my email for phishing indicators please."}
+        json={"query": "Scan my email for phishing indicators please."},
+        headers=headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -67,13 +116,17 @@ def test_agents_chat_endpoint():
     assert data["agent_executed"] == "phishing"
 
 def test_phishing_scan_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     response = client.post(
         "/api/v1/phishing/scan",
         json={
-            "email_content": "This is a safe email body.",
-            "email_subject": "Hello Friend",
-            "sender_email": "friend@gmail.com"
-        }
+            "email_data": {
+                "email_content": "This is a safe email body.",
+                "email_subject": "Hello Friend",
+                "sender_email": "friend@gmail.com"
+            }
+        },
+        headers=headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -81,25 +134,29 @@ def test_phishing_scan_endpoint():
     assert "verdict" in data
 
 def test_compliance_check_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     response = client.post(
         "/api/v1/compliance/check",
         json={
             "document_text": "This draft policy doesn't define personal data protection rules.",
             "document_name": "draft_policy.txt",
             "frameworks": ["GDPR"]
-        }
+        },
+        headers=headers
     )
     assert response.status_code == 200
     data = response.json()
     assert "gaps" in data
 
 def test_vendor_assessment_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     response = client.post(
         "/api/v1/vendor/assess",
         json={
             "vendor_name": "CloudHosting Co",
             "vendor_website": "https://cloudhosting.com"
-        }
+        },
+        headers=headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -107,25 +164,30 @@ def test_vendor_assessment_endpoint():
     assert "findings" in data
 
 def test_audit_readiness_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     # Use /reports instead of /status
-    response = client.get("/api/v1/audit/reports")
+    response = client.get("/api/v1/audit/reports", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
 
 def test_awareness_scenario_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     response = client.post(
         "/api/v1/awareness/scenario",
-        json={"topic": "BEC"}
+        json={"topic": "BEC"},
+        headers=headers
     )
     assert response.status_code == 200
     data = response.json()
     assert "interactive_scenario" in data
 
 def test_awareness_submit_endpoint():
+    headers = get_auth_headers("ciso@securecop.com")
     response = client.post(
         "/api/v1/awareness/submit",
-        json={"topic": "BEC", "correct": True}
+        json={"topic": "BEC", "correct": True},
+        headers=headers
     )
     assert response.status_code == 200
     data = response.json()

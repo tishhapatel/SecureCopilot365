@@ -98,3 +98,29 @@ export interface AuditReport {
   evidence_package?: string;
   assessed_at: string;
 }
+
+export interface PermissionResponse {
+  id: string;
+  permission_name: string;
+  module: string;
+}
+
+export interface RoleResponse {
+  id: string;
+  role_name: string;
+  description?: string;
+  permissions: PermissionResponse[];
+}
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  display_name: string;
+  department?: string;
+  tenant_id: string;
+  role: RoleResponse;
+  is_active: boolean;
+  last_login?: string;
+  created_at: string;
+}
+

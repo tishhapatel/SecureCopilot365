@@ -3,9 +3,10 @@ Vendor Risk route
 """
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from api.deps import get_db, get_current_user
+from api.deps import get_db, get_user_with_permission
 from agents.vendor_agent import VendorRiskAgent
 from db import crud, schemas
+from auth import permissions
 import json
 
 router = APIRouter()
@@ -15,7 +16,7 @@ vendor_agent = VendorRiskAgent()
 async def assess_vendor(
     vendor_data: dict = Body(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_user_with_permission(permissions.MANAGE_VENDORS))
 ):
     try:
         analysis = await vendor_agent.analyze(vendor_data, current_user)
@@ -33,7 +34,7 @@ async def assess_vendor(
             incident_history=json.dumps(vendor_data.get("incident_history", [])),
             notes=analysis.get("risk_summary")
         )
-        db_vendor = crud.create_vendor(db, vendor_schema)
+        db_vendor = crud.create_vendor(db, vendor_schema, tenant_id=current_user.get("tenant_id"))
         # Apply the final agent risk score directly
         db_vendor.risk_score = float(analysis.get("risk_score", 50.0))
         db.commit()
@@ -46,6 +47,6 @@ async def assess_vendor(
 @router.get("/list")
 async def list_vendors(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_user_with_permission(permissions.VIEW_VENDORS))
 ):
-    return crud.get_vendors(db)
+    return crud.get_vendors(db, tenant_id=current_user.get("tenant_id"))

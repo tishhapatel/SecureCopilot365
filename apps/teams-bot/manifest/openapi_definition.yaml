@@ -1,0 +1,77 @@
+openapi: 3.0.1
+info:
+  title: SecureCopilot 365 Copilot Actions API
+  description: M365 Copilot Action plugin gateway for SecureCopilot 365.
+  version: 1.0.0
+servers:
+  - url: https://securecopilot365.example.com/api/v1
+paths:
+  /agents/chat:
+    post:
+      summary: Send a query to the security AI agent orchestrator
+      operationId: orchestratorChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: The security query, request, or phishing email content to analyze.
+              required:
+                - query
+      responses:
+        '200':
+          description: Analysis report output from target sub-agent.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent_executed:
+                    type: string
+                  analysis:
+                    type: object
+  /vendor/check:
+    post:
+      summary: Analyze security profile for a vendor
+      operationId: checkVendorRisk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vendor_name:
+                  type: string
+                website:
+                  type: string
+              required:
+                - vendor_name
+      responses:
+        '200':
+          description: Vendor assessment details.
+  /compliance/check:
+    post:
+      summary: Perform a compliance gap assessment on a document
+      operationId: checkComplianceGap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                document_name:
+                  type: string
+                content:
+                  type: string
+              required:
+                - document_name
+                - content
+      responses:
+        '200':
+          description: List of compliance gaps found.

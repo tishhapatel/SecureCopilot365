@@ -133,6 +133,7 @@ class TrainingCompletion(TrainingCompletionBase):
 # Audit Log Schemas
 class AuditLogBase(BaseModel):
     user_entra_id: Optional[str] = None
+    user_id: Optional[str] = None
     action: str
     agent: Optional[str] = None
     query_hash: Optional[str] = None
@@ -140,6 +141,7 @@ class AuditLogBase(BaseModel):
     risk_level: Optional[str] = None
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
+    tenant_id: Optional[str] = "default_tenant"
 
 class AuditLogCreate(AuditLogBase):
     pass
@@ -149,3 +151,48 @@ class AuditLog(AuditLogBase):
     timestamp: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+# Permission Schemas
+class PermissionResponse(BaseModel):
+    id: str
+    permission_name: str
+    module: str
+    model_config = ConfigDict(from_attributes=True)
+
+# Role Schemas
+class RoleResponse(BaseModel):
+    id: str
+    role_name: str
+    description: Optional[str] = None
+    permissions: List[PermissionResponse] = []
+    model_config = ConfigDict(from_attributes=True)
+
+# User Schemas
+class UserBase(BaseModel):
+    email: EmailStr
+    display_name: str
+    department: Optional[str] = None
+    tenant_id: Optional[str] = "default_tenant"
+
+class UserCreate(UserBase):
+    password: str
+    role_name: str
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(UserBase):
+    id: str
+    role: RoleResponse
+    is_active: bool
+    last_login: Optional[datetime] = None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+

@@ -10,6 +10,9 @@
     },
     "appName": {
       "value": "securecop365"
+    },
+    "administratorLoginPassword": {
+      "value": "SuperSecurePass123!Admin"
     }
   }
 }

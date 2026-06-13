@@ -1,8 +1,9 @@
 """
 Database models for SecureCopilot 365.
-Schema: Employee → Department → Asset → Threat → Risk → Control → Compliance
+Schema: User → Role → Permission
+Telemetry Data: Employee, Vendor, PhishingIncident, ComplianceQuery, AuditReadiness, TrainingCompletion, AuditLog (includes tenant_id for isolation)
 """
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, ForeignKey, Enum, Table
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
 import enum, uuid
@@ -18,6 +19,43 @@ class RiskLevel(str, enum.Enum):
     MEDIUM = "medium"
     LOW = "low"
 
+# Many-to-many relationship table for Roles and Permissions
+role_permissions = Table(
+    "role_permissions",
+    Base.metadata,
+    Column("role_id", String(36), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
+    Column("permission_id", String(36), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
+)
+
+class Permission(Base):
+    __tablename__ = "permissions"
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    permission_name = Column(String(100), unique=True, nullable=False, index=True)
+    module = Column(String(100), nullable=False) # e.g. "phishing", "compliance"
+
+class Role(Base):
+    __tablename__ = "roles"
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    role_name = Column(String(100), unique=True, nullable=False, index=True)
+    description = Column(String(500))
+    # Relationships
+    permissions = relationship("Permission", secondary=role_permissions, backref="roles")
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    display_name = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=True) # Nullable for SSO (Entra ID) users
+    role_id = Column(String(36), ForeignKey("roles.id"), nullable=False)
+    department = Column(String(255))
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
+    is_active = Column(Boolean, default=True)
+    last_login = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    # Relationships
+    role = relationship("Role")
+
 class Employee(Base):
     __tablename__ = "employees"
     id = Column(String(36), primary_key=True, default=gen_uuid)
@@ -30,6 +68,7 @@ class Employee(Base):
     risk_score = Column(Float, default=0.0)
     awareness_score = Column(Float, default=0.0)
     last_training_date = Column(DateTime)
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     # Relationships
@@ -54,6 +93,7 @@ class Vendor(Base):
     pen_test_date = Column(DateTime)
     incident_history = Column(Text)         # JSON: list of known incidents
     notes = Column(Text)
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
 
@@ -69,6 +109,7 @@ class PhishingIncident(Base):
     indicators = Column(Text)              # JSON: list of detection reasons
     user_action = Column(String(50))       # reported | clicked | ignored
     reported_to_soc = Column(Boolean, default=False)
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     analyzed_at = Column(DateTime, server_default=func.now())
     employee = relationship("Employee", back_populates="phishing_incidents")
 
@@ -82,6 +123,7 @@ class ComplianceQuery(Base):
     gap_details = Column(Text)             # JSON: list of gap objects
     remediation_provided = Column(Boolean, default=True)
     citations = Column(Text)              # JSON: list of framework citations
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     query_at = Column(DateTime, server_default=func.now())
     employee = relationship("Employee", back_populates="compliance_queries")
 
@@ -96,6 +138,7 @@ class AuditReadiness(Base):
     controls_missing = Column(Integer)
     critical_gaps = Column(Text)          # JSON: list of critical gap objects
     evidence_package = Column(Text)       # JSON: collected evidence references
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     assessed_at = Column(DateTime, server_default=func.now())
     assessed_by = Column(String(36), ForeignKey("employees.id"))
 
@@ -107,6 +150,7 @@ class TrainingCompletion(Base):
     score = Column(Float)
     passed = Column(Boolean)
     certificate_id = Column(String(36), default=gen_uuid)
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     completed_at = Column(DateTime, server_default=func.now())
     employee = relationship("Employee", back_populates="training_completions")
 
@@ -114,6 +158,7 @@ class AuditLog(Base):
     __tablename__ = "audit_logs"
     id = Column(String(36), primary_key=True, default=gen_uuid)
     user_entra_id = Column(String(255), index=True)
+    user_id = Column(String(36), ForeignKey("users.id")) # Link to platform user
     action = Column(String(100), nullable=False)
     agent = Column(String(100))
     query_hash = Column(String(64))        # SHA-256 of query, not raw query
@@ -121,4 +166,5 @@ class AuditLog(Base):
     risk_level = Column(String(50))
     ip_address = Column(String(45))
     user_agent = Column(String(500))
+    tenant_id = Column(String(50), nullable=False, index=True, default="default_tenant")
     timestamp = Column(DateTime, server_default=func.now(), index=True)

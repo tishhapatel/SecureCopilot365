@@ -3,9 +3,10 @@ Phishing route
 """
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from api.deps import get_db, get_current_user
+from api.deps import get_db, get_user_with_permission
 from agents.phishing_agent import PhishingDetectionAgent
 from db import crud, schemas
+from auth import permissions
 import json
 
 router = APIRouter()
@@ -15,10 +16,10 @@ phishing_agent = PhishingDetectionAgent()
 async def scan_email(
     email_data: dict = Body(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_user_with_permission(permissions.SUBMIT_REPORTS))
 ):
     try:
-        emp = crud.get_employee_by_entra_id(db, current_user.get("entra_id"))
+        emp = crud.get_employee_by_entra_id(db, current_user.get("entra_id"), tenant_id=current_user.get("tenant_id"))
         if not emp:
             emp_schema = schemas.EmployeeCreate(
                 entra_id=current_user.get("entra_id"),
@@ -27,7 +28,7 @@ async def scan_email(
                 department=current_user.get("department"),
                 job_title=current_user.get("job_title")
             )
-            emp = crud.create_employee(db, emp_schema)
+            emp = crud.create_employee(db, emp_schema, tenant_id=current_user.get("tenant_id"))
 
         analysis = await phishing_agent.analyze(email_data, current_user)
         
@@ -42,11 +43,11 @@ async def scan_email(
             user_action="analyzed",
             reported_to_soc=analysis.get("report_to_soc", False)
         )
-        crud.create_phishing_incident(db, incident_schema)
+        crud.create_phishing_incident(db, incident_schema, tenant_id=current_user.get("tenant_id"))
         
         # Adjust risk score based on finding
         new_risk = round(max(emp.risk_score, float(analysis.get("risk_score", 0)) * 0.25), 1)
-        crud.update_employee_scores(db, emp.id, new_risk, emp.awareness_score)
+        crud.update_employee_scores(db, emp.id, new_risk, emp.awareness_score, tenant_id=current_user.get("tenant_id"))
 
         return analysis
     except Exception as e:
@@ -55,6 +56,6 @@ async def scan_email(
 @router.get("/incidents")
 async def list_incidents(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_user_with_permission(permissions.VIEW_INCIDENTS))
 ):
-    return crud.get_phishing_incidents(db)
+    return crud.get_phishing_incidents(db, tenant_id=current_user.get("tenant_id"))

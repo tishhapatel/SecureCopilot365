@@ -1,0 +1,15 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v1.0/schema.json",
+  "schemaVersion": "v1.0",
+  "name": "SecureCopilot Vendor Risk Plugin",
+  "description": "Analyzes and retrieves security metrics and ratings for third-party vendors.",
+  "actions": [
+    {
+      "type": "http",
+      "httpDefinition": {
+        "apiSpecificationFile": "openapi_definition.yaml",
+        "dependencyInformationId": "securecopilot-backend-connection"
+      }
+    }
+  ]
+}

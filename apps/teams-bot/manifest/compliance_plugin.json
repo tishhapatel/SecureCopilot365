@@ -1,0 +1,15 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v1.0/schema.json",
+  "schemaVersion": "v1.0",
+  "name": "SecureCopilot Compliance Review Plugin",
+  "description": "Reviews uploaded policy drafts, mappings, and highlights compliance gaps.",
+  "actions": [
+    {
+      "type": "http",
+      "httpDefinition": {
+        "apiSpecificationFile": "openapi_definition.yaml",
+        "dependencyInformationId": "securecopilot-backend-connection"
+      }
+    }
+  ]
+}

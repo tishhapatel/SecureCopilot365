@@ -3,9 +3,10 @@ Security Awareness Coach routes
 """
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from api.deps import get_db, get_current_user
+from api.deps import get_db, get_user_with_permission
 from agents.awareness_agent import SecurityAwarenessCoach
 from db import crud, schemas
+from auth import permissions
 from datetime import datetime
 
 router = APIRouter()
@@ -15,10 +16,10 @@ coach = SecurityAwarenessCoach()
 async def get_scenario(
     payload: dict = Body(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_user_with_permission(permissions.RUN_AWARENESS))
 ):
     try:
-        emp = crud.get_employee_by_entra_id(db, current_user.get("entra_id"))
+        emp = crud.get_employee_by_entra_id(db, current_user.get("entra_id"), tenant_id=current_user.get("tenant_id"))
         if not emp:
             emp_schema = schemas.EmployeeCreate(
                 entra_id=current_user.get("entra_id"),
@@ -27,7 +28,7 @@ async def get_scenario(
                 department=current_user.get("department"),
                 job_title=current_user.get("job_title")
             )
-            emp = crud.create_employee(db, emp_schema)
+            emp = crud.create_employee(db, emp_schema, tenant_id=current_user.get("tenant_id"))
             
         user_context = {
             "department": emp.department,
@@ -45,10 +46,10 @@ async def get_scenario(
 async def submit_response(
     submission: dict = Body(...),
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_user_with_permission(permissions.RUN_AWARENESS))
 ):
     try:
-        emp = crud.get_employee_by_entra_id(db, current_user.get("entra_id"))
+        emp = crud.get_employee_by_entra_id(db, current_user.get("entra_id"), tenant_id=current_user.get("tenant_id"))
         if not emp:
             raise HTTPException(status_code=404, detail="Employee profile not found")
 
@@ -58,7 +59,7 @@ async def submit_response(
             score=100.0 if submission.get("correct") else 0.0,
             passed=submission.get("correct")
         )
-        crud.create_training_completion(db, completion_schema)
+        crud.create_training_completion(db, completion_schema, tenant_id=current_user.get("tenant_id"))
 
         # Correct answer improves awareness, incorrect raises risk indices
         score_change = 4.0 if submission.get("correct") else -2.0
@@ -67,7 +68,7 @@ async def submit_response(
         risk_reduction = 1.5 if submission.get("correct") else -3.0
         new_risk = round(max(0.0, min(100.0, emp.risk_score - risk_reduction)), 1)
         
-        crud.update_employee_scores(db, emp.id, new_risk, new_awareness)
+        crud.update_employee_scores(db, emp.id, new_risk, new_awareness, tenant_id=current_user.get("tenant_id"))
         
         emp.last_training_date = datetime.utcnow()
         db.commit()

@@ -15,7 +15,7 @@ class FoundryIQ:
         self.search_key = os.getenv("AZURE_SEARCH_API_KEY")
         self.index_name = os.getenv("AZURE_SEARCH_INDEX_NAME")
         
-    async def retrieve(self, query: str, top_k: int = 5, index_filter: str = None) -> List[str]:
+    async def retrieve(self, query: str, top_k: int = 5, index_filter: str = None, user_context: dict = None) -> List[str]:
         """
         Retrieves matching framework controls or security techniques.
         Falls back to local file search if Azure AI Search is not set up.
@@ -29,15 +29,14 @@ class FoundryIQ:
             except Exception as e:
                 logger.error(f"Azure Search query failed: {e}. Using local fallback.")
 
-        return self._local_retrieve(query, top_k, index_filter)
+        return self._local_retrieve(query, top_k, index_filter, user_context)
 
-    def _local_retrieve(self, query: str, top_k: int, index_filter: str) -> List[str]:
+    def _local_retrieve(self, query: str, top_k: int, index_filter: str, user_context: dict) -> List[str]:
         """
         Reads local json files from knowledge-base/sources and performs simple keyword rank search.
         """
         results = []
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # Target path: d:\SecureCopilot365\knowledge-base\sources
         sources_dir = os.path.join(os.path.dirname(base_dir), "knowledge-base", "sources")
         
         # Map filters to filenames
@@ -52,7 +51,6 @@ class FoundryIQ:
         
         target_files = []
         if index_filter:
-            # Match filter key
             filter_str = index_filter.lower()
             for k, filename in files_to_check.items():
                 if k in filter_str or filter_str in k:
@@ -75,26 +73,31 @@ class FoundryIQ:
                 if isinstance(data, list):
                     items = data
                 elif isinstance(data, dict):
-                    # Check common dict key structures
                     items = data.get("controls") or data.get("articles") or data.get("techniques") or data.get("functions") or [data]
                 
-                # Score items based on keyword matching
                 scored_items = []
                 for item in items:
-                    # serialize item to string for search
+                    # RAG Chunk-Level ACL Verification Gate
+                    if user_context and isinstance(item, dict):
+                        user_role = user_context.get("role") or user_context.get("job_title")
+                        item_acl = item.get("acl") or item.get("allowed_roles")
+                        if item_acl:
+                            # If role is not authorized, bypass/skip this chunk
+                            if user_role not in item_acl and user_role != "Super Admin":
+                                logger.warning(f"RAG ACL Gating: User role '{user_role}' denied access to document chunk.")
+                                continue
+
                     item_str = json.dumps(item).lower()
                     score = sum(1 for kw in keywords if kw in item_str)
                     if score > 0:
                         scored_items.append((score, item))
                 
-                # Sort items by score and take top_k
                 scored_items.sort(reverse=True, key=lambda x: x[0])
                 for score, item in scored_items[:top_k]:
                     results.append(json.dumps(item, indent=2))
             except Exception as e:
                 logger.error(f"Error reading local file {filename}: {e}")
                 
-        # If no items found, return some basic default text to avoid blank context
         if not results:
             results = [
                 f"Default context for {index_filter or 'general compliance'}. Ensure relevant controls are documented.",
