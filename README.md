@@ -1,6 +1,6 @@
 # SecureCopilot 365 🛡️🤖
 
-![SecureCopilot365](docs/banner.png)
+![SecureCopilot365]
 
 SecureCopilot 365 is a production-ready, enterprise-grade AI Cybersecurity, Compliance, and Risk Management Agent designed for Microsoft 365 Copilot. It integrates with Microsoft Teams, Outlook, Word, and SharePoint to deliver real-time security insights, automated compliance gap audits, vendor risk analysis, and interactive security coaching.
 
