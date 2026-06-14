@@ -4,10 +4,13 @@ Welcome to the SecureCopilot 365 interactive demonstration.
 
 ## 🎬 Demo Video Overview
 
-This folder contains a full cinematic product demonstration video (`SecureCopilot365_Demo.webm`). The video showcases the core functionality of the AI agents and the Zero Trust architecture in action.
+This folder contains a full cinematic product demonstration video showcasing the core functionality of the AI agents and the Zero Trust architecture in action.
 
-### How to watch
-The `SecureCopilot365_Demo.webm` file can be opened directly in any modern web browser (Edge, Chrome, Firefox) or standard video player (like VLC). 
+<video src="https://github.com/tishhapatel/SecureCopilot365/raw/main/demo/034c7f3f-24b6-40e4-a355-596d18343b59.webm" controls="controls" muted="muted" class="d-block rounded-bottom-2 border-top width-fit" style="max-height:640px; min-height: 200px">
+  <a href="https://github.com/tishhapatel/SecureCopilot365/raw/main/demo/034c7f3f-24b6-40e4-a355-596d18343b59.webm">View Video</a>
+</video>
+
+*(If the video embed does not play in your browser, you can click the **[034c7f3f-24b6-40e4-a355-596d18343b59.webm](./034c7f3f-24b6-40e4-a355-596d18343b59.webm)** file in this directory to download or view it directly).*
 
 ---
 
