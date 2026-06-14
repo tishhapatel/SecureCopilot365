@@ -13,7 +13,7 @@ The `SecureCopilot365_Demo.webm` file can be opened directly in any modern web b
 
 ## 📸 Application Page Walkthrough
 
-Below are screenshots captured directly from the live application, demonstrating the key pages and features powered by the Multi-Agent LLM architecture.
+Below are screenshots captured directly from the live React application, demonstrating the key pages and features powered by the Multi-Agent LLM architecture.
 
 ### 1. CISO Command Center Dashboard
 ![CISO Dashboard](screenshots/01_CISO_Dashboard.png)
@@ -34,10 +34,3 @@ Below are screenshots captured directly from the live application, demonstrating
 ### 5. Audit & Incident Response
 ![Audit Readiness](screenshots/05_Audit_Incident_Response.png)
 **What it does:** The **Audit Agent** utilizes the Microsoft Graph API to continuously pull tenant evidence (MFA statuses, conditional access policies) and map them to compliance frameworks to generate a real-time "Readiness Score." It is coupled with the Incident Response workflow that tracks threats through a state machine (Triaging → Investigating → Containing).
-
-### 6. Architecture & Data Flow
-![Architecture Overview](screenshots/06_Architecture_Overview.png)
-**What it does:** A visual overview of the three proprietary IQ layers that power SecureCopilot 365:
-- **Work IQ**: Provides organizational context (user roles, departments).
-- **Foundry IQ**: The RAG pipeline connecting agents to the knowledge base.
-- **Fabric IQ**: The semantic ontology layer mapping threats to compliance controls.
